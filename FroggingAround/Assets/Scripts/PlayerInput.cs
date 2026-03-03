@@ -17,14 +17,16 @@ public class PlayerInput : MonoBehaviour
     public AnimationCurve extendSpeedCurve;
     float extendTimer;
 
-    bool avaliablePoint;
-    bool tongueOut;
-    bool tongueAttached;
+    public bool avaliablePoint;
+    public bool tongueOut;
+    public bool tongueAttached;
+    public bool retracting;
     void Start()
     {
         avaliablePoint = false;
         tongueOut = false;
         tongueAttached = false;
+        retracting = false;
 
         tongueLR.positionCount = 2;
         tongueLR.SetPosition(0, transform.position);
@@ -41,9 +43,11 @@ public class PlayerInput : MonoBehaviour
     void GetInputs()
     {
         if (Input.GetKeyDown(KeyCode.Mouse0)) { ExtendTongue(); }
+        if (Input.GetKeyUp(KeyCode.Mouse0)) { retracting = true; }
     }
     void ExtendTongue()
     {
+        if (retracting) { return; }
         if (avaliablePoint) 
         {
             lockPoint.position = lookPoint.position;
@@ -59,15 +63,24 @@ public class PlayerInput : MonoBehaviour
     }
     void ManageTongue()
     {
-        if (tongueOut)
+        if (tongueOut && !retracting)
         {
             extendTimer += Time.deltaTime * extendSpeed; if (extendTimer > 1) { extendTimer = 1; tongueAttached = true; }
+            attachPoint.position = Vector3.Lerp(transform.position, lockPoint.position, extendSpeedCurve.Evaluate(extendTimer));
+
+            if (Vector3.Distance(transform.position, attachPoint.position) > maxReach + 2f) { retracting = true; lockPoint.parent = transform; tongueAttached = false; }
+        }
+        else if (tongueOut && retracting)
+        {
+            extendTimer -= Time.deltaTime * extendSpeed; if (extendTimer < 0) { extendTimer = 0; retracting = false; tongueOut = false; }
             attachPoint.position = Vector3.Lerp(transform.position, lockPoint.position, extendSpeedCurve.Evaluate(extendTimer));
         }
         else
         {
 
         }
+
+        if (retracting && extendTimer <= 0) { extendTimer = 0; retracting = false; tongueOut = false; attachPoint.position = transform.position; }
     }
     void Effects()
     {
