@@ -73,3 +73,27 @@ crashlytics-build.properties
 # Temporary auto-generated Android Assets
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
+
+/FroggingAround/[Ll]ibrary/
+/FroggingAround/[Tt]emp/
+/FroggingAround/[Oo]bj/
+/FroggingAround/[Bb]uild/
+/FroggingAround/[Bb]uilds/
+/FroggingAround/[Ll]ogs/
+/FroggingAround/[Uu]ser[Ss]ettings/
+
+/FroggingAround/Library/
+/FroggingAround/Temp/
+/FroggingAround/Obj/
+/FroggingAround/Build/
+/FroggingAround/Builds/
+/FroggingAround/Logs/
+/FroggingAround/UserSettings/
+
+/FroggingAround/library/
+/FroggingAround/temp/
+/FroggingAround/obj/
+/FroggingAround/build/
+/FroggingAround/builds/
+/FroggingAround/logs/
+/FroggingAround/usersettings/
