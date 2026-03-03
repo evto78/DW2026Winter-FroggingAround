@@ -45,7 +45,8 @@ public class FlyScript : MonoBehaviour
         if (leftWing.localEulerAngles.z < -5 && wingDir == 1) { wingDir = -1; }
         if (leftWing.localEulerAngles.z > 5 && wingDir == -1) { wingDir = 1; }
 
-        transform.rotation = Quaternion.LookRotation(rb.velocity);
+        if (rb.velocity.magnitude != 0) { transform.rotation = Quaternion.LookRotation(rb.velocity); }
+        
         if (Vector3.Distance(transform.position, startPoint+randOffset) < 0.5f) { randFlyOffset = new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)); }
         rb.AddForce((((startPoint + randOffset) - transform.position)/2f + randFlyOffset/1.2f) * flySpeed * randFlySpeedMod * Time.deltaTime);
     }
