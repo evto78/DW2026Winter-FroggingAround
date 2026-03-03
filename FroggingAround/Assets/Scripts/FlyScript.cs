@@ -15,6 +15,7 @@ public class FlyScript : MonoBehaviour
     Vector3 startPoint;
     Vector3 randOffset;
     Vector3 randFlyOffset;
+    float randFlySpeedMod;
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -23,6 +24,7 @@ public class FlyScript : MonoBehaviour
         startPoint = transform.position;
         randOffset = new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f));
         randFlyOffset = new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f));
+        randFlySpeedMod = Random.Range(1f, 2f);
     }
     public void Hit()
     {
@@ -44,7 +46,7 @@ public class FlyScript : MonoBehaviour
         if (leftWing.localEulerAngles.z > 5 && wingDir == -1) { wingDir = 1; }
 
         transform.rotation = Quaternion.LookRotation(rb.velocity);
-
-        rb.AddForce((((startPoint + randOffset) - transform.position).normalized + randFlyOffset) * flySpeed * Time.deltaTime);
+        if (Vector3.Distance(transform.position, startPoint+randOffset) < 0.5f) { randFlyOffset = new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)); }
+        rb.AddForce((((startPoint + randOffset) - transform.position)/2f + randFlyOffset/1.2f) * flySpeed * randFlySpeedMod * Time.deltaTime);
     }
 }

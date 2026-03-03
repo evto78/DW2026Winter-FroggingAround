@@ -159,7 +159,7 @@ public class PlayerMovement : MonoBehaviour
         if (jumpsLeft > 0 && onGround)
         {
             jumpsLeft -= 1;
-            rb.AddForce(transform.up * jumpForce, ForceMode.Force);
+            rb.AddForce((transform.up+(transform.forward/2f)) * jumpForce, ForceMode.Force);
         }
     }
     void Friction()

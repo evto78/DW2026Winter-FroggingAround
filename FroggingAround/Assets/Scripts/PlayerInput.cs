@@ -25,10 +25,11 @@ public class PlayerInput : MonoBehaviour
     public float scrollStrength;
 
     float startDist;
-    public bool avaliablePoint;
-    public bool tongueOut;
-    public bool tongueAttached;
-    public bool retracting;
+    bool avaliablePoint;
+    bool tongueOut;
+    bool tongueAttached;
+    bool retracting;
+    public bool lookingAtFly;
     void Start()
     {
         mvt = GetComponent<PlayerMovement>();
@@ -49,8 +50,8 @@ public class PlayerInput : MonoBehaviour
     }
     void GetInputs()
     {
-        if (Input.GetKeyDown(KeyCode.Mouse0)) { ExtendTongue(); }
-        if (Input.GetKeyUp(KeyCode.Mouse0)) { retracting = true; }
+        if (Input.GetKeyDown(KeyCode.Mouse0) || (lookingAtFly && Input.GetKey(KeyCode.Mouse0))) { ExtendTongue(); }
+        else if (Input.GetKeyUp(KeyCode.Mouse0)) { retracting = true;}
 
         float scrollData = Input.mouseScrollDelta.y;
 
@@ -155,15 +156,20 @@ public class PlayerInput : MonoBehaviour
             avaliablePoint = true;
             lookPoint.transform.position = hit.point;
             lookAtObject = hit.transform;
+
+            lookingAtFly = hit.transform.gameObject.tag == "Fly";
         }
         else
         {
+            lookingAtFly = false;
             avaliablePoint = false;
-            lookPoint.transform.position = camHolder.position + camHolder.forward * (maxReach - 2f);
+            //lookPoint.transform.position = camHolder.position + camHolder.forward * (maxReach - 2f);
+            lookPoint.transform.position = camHolder.position - camHolder.forward;
         }
     }
     public void FlyCollected()
     {
-        Debug.Log("Collected a fly!");
+        lockPoint.transform.parent = transform;
+        retracting = true;
     }
 }
