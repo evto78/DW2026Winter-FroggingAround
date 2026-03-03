@@ -162,4 +162,8 @@ public class PlayerInput : MonoBehaviour
             lookPoint.transform.position = camHolder.position + camHolder.forward * (maxReach - 2f);
         }
     }
+    public void FlyCollected()
+    {
+        Debug.Log("Collected a fly!");
+    }
 }
