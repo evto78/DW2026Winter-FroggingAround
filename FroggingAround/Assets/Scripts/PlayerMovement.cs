@@ -12,27 +12,25 @@ public class PlayerMovement : MonoBehaviour
     float pitch = 0.0f;
 
     public float baseMoveSpeed;
-    public float baseSprintMoveSpeed;
+    float baseSprintMoveSpeed;
     public float baseJumpForce;
-    public int baseNumberOfJumps;
+    int baseNumberOfJumps;
 
     public float friction;
 
-    public float moveSpeed;
-    public float sprintMoveSpeed;
-    public float jumpForce;
-    public float airStrafeSpeed;
-    public int numberOfJumps;
+    float moveSpeed;
+    float sprintMoveSpeed;
+    float jumpForce;
+    float airStrafeSpeed;
+    int numberOfJumps;
     int jumpsLeft;
-    public float gravityModifier;
+    float gravityModifier;
 
     bool onGround;
-    public bool isSprinting;
-    public float timeSinceGrounded;
+    bool isSprinting;
 
     Vector3 inputDir;
 
-    // Start is called before the first frame update
     void Start()
     {
         jumpsLeft = numberOfJumps;
@@ -56,8 +54,6 @@ public class PlayerMovement : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        timeSinceGrounded += Time.deltaTime;
-
         onGround = GroundCheck();
         if (Cursor.lockState == CursorLockMode.Locked) { CameraMove(); }
         GetInputs();
@@ -77,7 +73,6 @@ public class PlayerMovement : MonoBehaviour
             if (hit.transform.gameObject.CompareTag("Ground") || hit.transform.gameObject.CompareTag("Untagged"))
             {
                 jumpsLeft = numberOfJumps;
-                timeSinceGrounded = 0f;
                 return true;
             }
         }
@@ -161,7 +156,7 @@ public class PlayerMovement : MonoBehaviour
     }
     void Jump()
     {
-        if (jumpsLeft > 0)
+        if (jumpsLeft > 0 && onGround)
         {
             jumpsLeft -= 1;
             rb.AddForce(transform.up * jumpForce, ForceMode.Force);
