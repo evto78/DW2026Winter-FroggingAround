@@ -17,10 +17,12 @@ public class PlayerInput : MonoBehaviour
     Rigidbody attachedRb;
 
     public float maxReach;
+    public AnimationCurve pointSagCurve;
     public float extendSpeed;
     public AnimationCurve extendSpeedCurve;
     float extendTimer;
     public float pullStrength;
+    public float scrollStrength;
 
     float startDist;
     public bool avaliablePoint;
@@ -36,10 +38,6 @@ public class PlayerInput : MonoBehaviour
         tongueOut = false;
         tongueAttached = false;
         retracting = false;
-
-        tongueLR.positionCount = 2;
-        tongueLR.SetPosition(0, transform.position);
-        tongueLR.SetPosition(1, transform.position);
     }
     void Update()
     {
@@ -53,6 +51,11 @@ public class PlayerInput : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Mouse0)) { ExtendTongue(); }
         if (Input.GetKeyUp(KeyCode.Mouse0)) { retracting = true; }
+
+        float scrollData = Input.mouseScrollDelta.y;
+
+        startDist += scrollData * scrollStrength * Time.deltaTime;
+        startDist = Mathf.Clamp(startDist, 0, maxReach);
     }
     void ExtendTongue()
     {
@@ -73,8 +76,12 @@ public class PlayerInput : MonoBehaviour
     }
     void ManageTongue()
     {
+        attachPoint.GetComponentInChildren<MeshRenderer>().enabled = false;
+
         if (tongueOut && !retracting)
         {
+            attachPoint.GetComponentInChildren<MeshRenderer>().enabled = true;
+
             extendTimer += Time.deltaTime * extendSpeed; if (extendTimer > 1) { extendTimer = 1; tongueAttached = true; }
             attachPoint.position = Vector3.Lerp(transform.position, lockPoint.position, extendSpeedCurve.Evaluate(extendTimer));
 
@@ -83,6 +90,8 @@ public class PlayerInput : MonoBehaviour
         }
         else if (tongueOut && retracting)
         {
+            attachPoint.GetComponentInChildren<MeshRenderer>().enabled = true;
+
             extendTimer -= Time.deltaTime * extendSpeed; if (extendTimer < 0) { extendTimer = 0; retracting = false; tongueOut = false; }
             attachPoint.position = Vector3.Lerp(transform.position, lockPoint.position, extendSpeedCurve.Evaluate(extendTimer));
         }
@@ -96,23 +105,26 @@ public class PlayerInput : MonoBehaviour
         if (tongueAttached)
         {
             float curDist = Vector3.Distance(transform.position, attachPoint.position);
-            if (curDist < startDist - 2) { startDist -= 0.5f; }
+            if (curDist < startDist - 2) 
+            { 
+                //startDist -= 0.5f; 
+            }
             else if (curDist > startDist) 
             { 
                 float difference = curDist - startDist;
 
                 if (attachedRb == null) //Attached obj is static
                 {
-                    rb.AddForce((attachPoint.position - transform.position).normalized * (difference / 2f) * pullStrength);
+                    rb.AddForce((attachPoint.position - transform.position).normalized * (difference / 2f) * pullStrength / 2f);
                 }
                 else if (rb.mass > attachedRb.mass) //Attached obj is lighter
                 {
-                    rb.AddForce((attachPoint.position - transform.position).normalized * (difference / 2f) * pullStrength);
+                    rb.AddForce((attachPoint.position - transform.position).normalized * (difference / 2f) * pullStrength / 2f);
                     attachedRb.AddForceAtPosition((transform.position - attachPoint.position).normalized * (difference / 2f) * pullStrength, attachPoint.position);
                 }
                 else if (rb.mass <= attachedRb.mass) //Attached obj is heavier
                 {
-                    rb.AddForce((attachPoint.position - transform.position).normalized * (difference / 2f) * pullStrength);
+                    rb.AddForce((attachPoint.position - transform.position).normalized * (difference / 2f) * pullStrength / 2f);
                     attachedRb.AddForceAtPosition((transform.position - attachPoint.position).normalized * (difference / 2f) * pullStrength, attachPoint.position);
                 }
             }
@@ -120,8 +132,19 @@ public class PlayerInput : MonoBehaviour
     }
     void Effects()
     {
-        tongueLR.SetPosition(0, transform.position);
-        tongueLR.SetPosition(1, attachPoint.transform.position);
+        tongueLR.positionCount = 10;
+        float curDist = Vector3.Distance(transform.position, attachPoint.position);
+        for (int i = 0; i < tongueLR.positionCount; i++)
+        {
+            Vector3 verticalOffset = Vector3.zero;
+            Vector3 horizontalOffset = Vector3.zero;
+            if (tongueAttached && startDist > 0)
+            {
+                //verticalOffset = -1 * ((Mathf.Clamp(startDist - curDist, 0, 20)/20f) * (Vector3.up * pointSagCurve.Evaluate((float)i / ((float)tongueLR.positionCount - 1))));
+                horizontalOffset = transform.right * 2 * Random.Range(-1f, 1f) * (Mathf.Clamp((curDist+5) - startDist, 0, 10)/10f) * (Time.deltaTime);
+            }
+            tongueLR.SetPosition(i, Vector3.Lerp(transform.position, attachPoint.position, (float)i/((float)tongueLR.positionCount-1f)) + horizontalOffset + verticalOffset);
+        }
         tongueLR.enabled = tongueOut;
     }
     void Look()

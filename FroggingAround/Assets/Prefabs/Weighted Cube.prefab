@@ -98,7 +98,7 @@ GameObject:
   - component: {fileID: 6189666225580345282}
   - component: {fileID: 5002385596328855709}
   m_Layer: 0
-  m_Name: Selectable Cube
+  m_Name: Weighted Cube
   m_TagString: Interactable
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

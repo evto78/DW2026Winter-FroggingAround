@@ -42,7 +42,7 @@ public class PlayerMovement : MonoBehaviour
         moveSpeed = baseMoveSpeed;
         sprintMoveSpeed = baseSprintMoveSpeed;
         jumpForce = baseJumpForce;
-        airStrafeSpeed = moveSpeed * 0.5f;
+        airStrafeSpeed = moveSpeed * 0.25f;
         numberOfJumps = baseNumberOfJumps;
         gravityModifier = 1f;
 
