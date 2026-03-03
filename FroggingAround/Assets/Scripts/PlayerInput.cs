@@ -5,49 +5,89 @@ using UnityEngine;
 public class PlayerInput : MonoBehaviour
 {
     public Transform camHolder;
-    public float interactDistance;
 
-    public GameObject heldObject;
+    public LineRenderer tongueLR;
+    public Transform attachPoint;
+    public Transform lookPoint;
+    Transform lookAtObject;
+    public Transform lockPoint;
 
+    public float maxReach;
+    public float extendSpeed;
+    public AnimationCurve extendSpeedCurve;
+    float extendTimer;
+
+    bool avaliablePoint;
+    bool tongueOut;
+    bool tongueAttached;
     void Start()
     {
-        heldObject = null;
+        avaliablePoint = false;
+        tongueOut = false;
+        tongueAttached = false;
+
+        tongueLR.positionCount = 2;
+        tongueLR.SetPosition(0, transform.position);
+        tongueLR.SetPosition(1, transform.position);
     }
     void Update()
     {
-        if(heldObject != null)
+        Look();
+        GetInputs();
+
+        ManageTongue();
+        Effects();
+    }
+    void GetInputs()
+    {
+        if (Input.GetKeyDown(KeyCode.Mouse0)) { ExtendTongue(); }
+    }
+    void ExtendTongue()
+    {
+        if (avaliablePoint) 
         {
-
-            heldObject.transform.position = Vector3.Lerp(heldObject.transform.position, (camHolder.position - camHolder.up) + camHolder.forward * 3f, Time.deltaTime * 20f);
-
-            if (Input.GetKeyDown(KeyCode.E)) 
-            {
-                InteractableObject tScript = heldObject.GetComponent<InteractableObject>();
-                tScript.rb.useGravity = true;
-                tScript.rb.AddForce(camHolder.forward * 25f + camHolder.up * 5f, ForceMode.Impulse);
-                heldObject = null;
-            }
+            lockPoint.position = lookPoint.position;
+            lockPoint.parent = lookAtObject;
+            tongueOut = true;
+            tongueAttached = false;
+            extendTimer = 0f;
         }
         else
         {
-            Ray ray = new Ray(camHolder.position, camHolder.forward);
-            if (Physics.Raycast(ray, out RaycastHit hit, interactDistance) && hit.collider.gameObject.CompareTag("Interactable"))
-            {
-                GameObject tarObject = hit.collider.gameObject;
-                InteractableObject interactScript = tarObject.GetComponent<InteractableObject>();
 
-                interactScript.HoverOver();
+        }
+    }
+    void ManageTongue()
+    {
+        if (tongueOut)
+        {
+            extendTimer += Time.deltaTime * extendSpeed; if (extendTimer > 1) { extendTimer = 1; tongueAttached = true; }
+            attachPoint.position = Vector3.Lerp(transform.position, lockPoint.position, extendSpeedCurve.Evaluate(extendTimer));
+        }
+        else
+        {
 
-                if (Input.GetKeyDown(KeyCode.E))
-                {
-                    interactScript.Interact(this);
-                    if (interactScript.pickupable && heldObject == null)
-                    {
-                        interactScript.rb.useGravity = false;
-                        heldObject = tarObject;
-                    }
-                }
-            }
+        }
+    }
+    void Effects()
+    {
+        tongueLR.SetPosition(0, transform.position);
+        tongueLR.SetPosition(1, attachPoint.transform.position);
+        tongueLR.enabled = tongueOut;
+    }
+    void Look()
+    {
+        Ray ray = new Ray(camHolder.position, camHolder.forward);
+        if (Physics.Raycast(ray, out RaycastHit hit, maxReach))
+        {
+            avaliablePoint = true;
+            lookPoint.transform.position = hit.point;
+            lookAtObject = hit.transform;
+        }
+        else
+        {
+            avaliablePoint = false;
+            lookPoint.transform.position = camHolder.position + camHolder.forward * (maxReach - 2f);
         }
     }
 }

@@ -26,7 +26,7 @@ public class PlayerMovement : MonoBehaviour
     int jumpsLeft;
     float gravityModifier;
 
-    bool onGround;
+    public bool onGround;
     bool isSprinting;
 
     Vector3 inputDir;
@@ -36,9 +36,7 @@ public class PlayerMovement : MonoBehaviour
         jumpsLeft = numberOfJumps;
         rb = GetComponent<Rigidbody>();
 
-        baseMoveSpeed = 600f;
         baseSprintMoveSpeed = baseMoveSpeed * 1.6f;
-        baseJumpForce = 2000f;
         baseNumberOfJumps = 1;
 
         moveSpeed = baseMoveSpeed;
@@ -50,8 +48,6 @@ public class PlayerMovement : MonoBehaviour
 
         Cursor.lockState = CursorLockMode.Locked;
     }
-
-    // Update is called once per frame
     void Update()
     {
         onGround = GroundCheck();
@@ -68,7 +64,7 @@ public class PlayerMovement : MonoBehaviour
     }
     bool GroundCheck()
     {
-        if (Physics.BoxCast(new Vector3(transform.position.x, transform.position.y - 0f, transform.position.z), transform.localScale * 0.5f, -Vector3.up, out RaycastHit hit, transform.rotation, 1f))
+        if (Physics.BoxCast(new Vector3(transform.position.x, transform.position.y+0.5f, transform.position.z), transform.localScale * 0.5f, -Vector3.up, out RaycastHit hit, transform.rotation, 1f))
         {
             if (hit.transform.gameObject.CompareTag("Ground") || hit.transform.gameObject.CompareTag("Untagged"))
             {
@@ -94,6 +90,10 @@ public class PlayerMovement : MonoBehaviour
             transform.eulerAngles = new Vector3(transform.eulerAngles.x, yaw, transform.eulerAngles.z);
             cam.transform.eulerAngles = new Vector3(pitch, transform.eulerAngles.y, transform.eulerAngles.z);
         }
+    }
+    void effects()
+    {
+
     }
     void GetInputs()
     {
