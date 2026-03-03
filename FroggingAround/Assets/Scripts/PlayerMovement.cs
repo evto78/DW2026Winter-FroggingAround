@@ -12,52 +12,44 @@ public class PlayerMovement : MonoBehaviour
     float pitch = 0.0f;
 
     public float baseMoveSpeed;
-    public float baseSprintMoveSpeed;
+    float baseSprintMoveSpeed;
     public float baseJumpForce;
-    public int baseNumberOfJumps;
+    int baseNumberOfJumps;
 
     public float friction;
 
-    public float moveSpeed;
-    public float sprintMoveSpeed;
-    public float jumpForce;
-    public float airStrafeSpeed;
-    public int numberOfJumps;
+    float moveSpeed;
+    float sprintMoveSpeed;
+    float jumpForce;
+    float airStrafeSpeed;
+    int numberOfJumps;
     int jumpsLeft;
-    public float gravityModifier;
+    float gravityModifier;
 
-    bool onGround;
-    public bool isSprinting;
-    public float timeSinceGrounded;
+    public bool onGround;
+    bool isSprinting;
 
     Vector3 inputDir;
 
-    // Start is called before the first frame update
     void Start()
     {
         jumpsLeft = numberOfJumps;
         rb = GetComponent<Rigidbody>();
 
-        baseMoveSpeed = 600f;
         baseSprintMoveSpeed = baseMoveSpeed * 1.6f;
-        baseJumpForce = 2000f;
         baseNumberOfJumps = 1;
 
         moveSpeed = baseMoveSpeed;
         sprintMoveSpeed = baseSprintMoveSpeed;
         jumpForce = baseJumpForce;
-        airStrafeSpeed = moveSpeed * 0.5f;
+        airStrafeSpeed = moveSpeed * 0.25f;
         numberOfJumps = baseNumberOfJumps;
         gravityModifier = 1f;
 
         Cursor.lockState = CursorLockMode.Locked;
     }
-
-    // Update is called once per frame
     void Update()
     {
-        timeSinceGrounded += Time.deltaTime;
-
         onGround = GroundCheck();
         if (Cursor.lockState == CursorLockMode.Locked) { CameraMove(); }
         GetInputs();
@@ -72,12 +64,11 @@ public class PlayerMovement : MonoBehaviour
     }
     bool GroundCheck()
     {
-        if (Physics.BoxCast(new Vector3(transform.position.x, transform.position.y - 0f, transform.position.z), transform.localScale * 0.5f, -Vector3.up, out RaycastHit hit, transform.rotation, 1f))
+        if (Physics.BoxCast(new Vector3(transform.position.x, transform.position.y+0.5f, transform.position.z), transform.localScale * 0.5f, -Vector3.up, out RaycastHit hit, transform.rotation, 1f))
         {
             if (hit.transform.gameObject.CompareTag("Ground") || hit.transform.gameObject.CompareTag("Untagged"))
             {
                 jumpsLeft = numberOfJumps;
-                timeSinceGrounded = 0f;
                 return true;
             }
         }
@@ -99,6 +90,10 @@ public class PlayerMovement : MonoBehaviour
             transform.eulerAngles = new Vector3(transform.eulerAngles.x, yaw, transform.eulerAngles.z);
             cam.transform.eulerAngles = new Vector3(pitch, transform.eulerAngles.y, transform.eulerAngles.z);
         }
+    }
+    void effects()
+    {
+
     }
     void GetInputs()
     {
@@ -161,10 +156,10 @@ public class PlayerMovement : MonoBehaviour
     }
     void Jump()
     {
-        if (jumpsLeft > 0)
+        if (jumpsLeft > 0 && onGround)
         {
             jumpsLeft -= 1;
-            rb.AddForce(transform.up * jumpForce, ForceMode.Force);
+            rb.AddForce((transform.up+(transform.forward/2f)) * jumpForce, ForceMode.Force);
         }
     }
     void Friction()

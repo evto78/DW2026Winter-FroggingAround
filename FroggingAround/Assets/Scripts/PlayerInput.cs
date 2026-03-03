@@ -5,49 +5,171 @@ using UnityEngine;
 public class PlayerInput : MonoBehaviour
 {
     public Transform camHolder;
-    public float interactDistance;
 
-    public GameObject heldObject;
+    public LineRenderer tongueLR;
+    public Transform attachPoint;
+    public Transform lookPoint;
+    Transform lookAtObject;
+    public Transform lockPoint;
 
+    PlayerMovement mvt;
+    Rigidbody rb;
+    Rigidbody attachedRb;
+
+    public float maxReach;
+    public AnimationCurve pointSagCurve;
+    public float extendSpeed;
+    public AnimationCurve extendSpeedCurve;
+    float extendTimer;
+    public float pullStrength;
+    public float scrollStrength;
+
+    float startDist;
+    bool avaliablePoint;
+    bool tongueOut;
+    bool tongueAttached;
+    bool retracting;
+    public bool lookingAtFly;
     void Start()
     {
-        heldObject = null;
+        mvt = GetComponent<PlayerMovement>();
+        rb = mvt.rb;
+
+        avaliablePoint = false;
+        tongueOut = false;
+        tongueAttached = false;
+        retracting = false;
     }
     void Update()
     {
-        if(heldObject != null)
+        Look();
+        GetInputs();
+
+        ManageTongue();
+        Effects();
+    }
+    void GetInputs()
+    {
+        if (Input.GetKeyDown(KeyCode.Mouse0) || (lookingAtFly && Input.GetKey(KeyCode.Mouse0))) { ExtendTongue(); }
+        else if (Input.GetKeyUp(KeyCode.Mouse0)) { retracting = true;}
+
+        float scrollData = Input.mouseScrollDelta.y;
+
+        startDist += scrollData * scrollStrength * Time.deltaTime;
+        startDist = Mathf.Clamp(startDist, 0, maxReach);
+    }
+    void ExtendTongue()
+    {
+        if (retracting) { return; }
+        if (avaliablePoint) 
         {
-
-            heldObject.transform.position = Vector3.Lerp(heldObject.transform.position, (camHolder.position - camHolder.up) + camHolder.forward * 3f, Time.deltaTime * 20f);
-
-            if (Input.GetKeyDown(KeyCode.E)) 
-            {
-                InteractableObject tScript = heldObject.GetComponent<InteractableObject>();
-                tScript.rb.useGravity = true;
-                tScript.rb.AddForce(camHolder.forward * 25f + camHolder.up * 5f, ForceMode.Impulse);
-                heldObject = null;
-            }
+            lockPoint.position = lookPoint.position;
+            lockPoint.parent = lookAtObject;
+            if (lookAtObject.TryGetComponent<Rigidbody>(out Rigidbody tempRb))
+            { attachedRb = tempRb; }
+            else if (lookAtObject.GetComponentInParent<Rigidbody>() != null)
+            { attachedRb = lookAtObject.GetComponentInParent<Rigidbody>(); }
+            else { attachedRb = null; }
+            tongueOut = true;
+            tongueAttached = false;
+            extendTimer = 0f;
         }
-        else
+    }
+    void ManageTongue()
+    {
+        attachPoint.GetComponentInChildren<MeshRenderer>().enabled = false;
+
+        if (tongueOut && !retracting)
         {
-            Ray ray = new Ray(camHolder.position, camHolder.forward);
-            if (Physics.Raycast(ray, out RaycastHit hit, interactDistance) && hit.collider.gameObject.CompareTag("Interactable"))
-            {
-                GameObject tarObject = hit.collider.gameObject;
-                InteractableObject interactScript = tarObject.GetComponent<InteractableObject>();
+            attachPoint.GetComponentInChildren<MeshRenderer>().enabled = true;
 
-                interactScript.HoverOver();
+            extendTimer += Time.deltaTime * extendSpeed; if (extendTimer > 1) { extendTimer = 1; tongueAttached = true; }
+            attachPoint.position = Vector3.Lerp(transform.position, lockPoint.position, extendSpeedCurve.Evaluate(extendTimer));
 
-                if (Input.GetKeyDown(KeyCode.E))
+            if (Vector3.Distance(transform.position, attachPoint.position) > maxReach + 2f) 
+            { retracting = true; lockPoint.parent = transform; tongueAttached = false; startDist = Vector3.Distance(transform.position, attachPoint.position); }
+        }
+        else if (tongueOut && retracting)
+        {
+            attachPoint.GetComponentInChildren<MeshRenderer>().enabled = true;
+
+            extendTimer -= Time.deltaTime * extendSpeed; if (extendTimer < 0) { extendTimer = 0; retracting = false; tongueOut = false; }
+            attachPoint.position = Vector3.Lerp(transform.position, lockPoint.position, extendSpeedCurve.Evaluate(extendTimer));
+        }
+
+        if (retracting && extendTimer <= 0) { extendTimer = 0; retracting = false; tongueOut = false; attachPoint.position = transform.position; }
+
+        TonguePhysics();
+    }
+    void TonguePhysics()
+    {
+        if (tongueAttached)
+        {
+            float curDist = Vector3.Distance(transform.position, attachPoint.position);
+            if (curDist < startDist - 2) 
+            { 
+                //startDist -= 0.5f; 
+            }
+            else if (curDist > startDist) 
+            { 
+                float difference = curDist - startDist;
+
+                if (attachedRb == null) //Attached obj is static
                 {
-                    interactScript.Interact(this);
-                    if (interactScript.pickupable && heldObject == null)
-                    {
-                        interactScript.rb.useGravity = false;
-                        heldObject = tarObject;
-                    }
+                    rb.AddForce((attachPoint.position - transform.position).normalized * (difference / 2f) * pullStrength / 2f);
+                }
+                else if (rb.mass > attachedRb.mass) //Attached obj is lighter
+                {
+                    rb.AddForce((attachPoint.position - transform.position).normalized * (difference / 2f) * pullStrength / 2f);
+                    attachedRb.AddForceAtPosition((transform.position - attachPoint.position).normalized * (difference / 2f) * pullStrength, attachPoint.position);
+                }
+                else if (rb.mass <= attachedRb.mass) //Attached obj is heavier
+                {
+                    rb.AddForce((attachPoint.position - transform.position).normalized * (difference / 2f) * pullStrength / 2f);
+                    attachedRb.AddForceAtPosition((transform.position - attachPoint.position).normalized * (difference / 2f) * pullStrength, attachPoint.position);
                 }
             }
         }
+    }
+    void Effects()
+    {
+        tongueLR.positionCount = 10;
+        float curDist = Vector3.Distance(transform.position, attachPoint.position);
+        for (int i = 0; i < tongueLR.positionCount; i++)
+        {
+            Vector3 verticalOffset = Vector3.zero;
+            Vector3 horizontalOffset = Vector3.zero;
+            if (tongueAttached && startDist > 0)
+            {
+                //verticalOffset = -1 * ((Mathf.Clamp(startDist - curDist, 0, 20)/20f) * (Vector3.up * pointSagCurve.Evaluate((float)i / ((float)tongueLR.positionCount - 1))));
+                horizontalOffset = transform.right * 2 * Random.Range(-1f, 1f) * (Mathf.Clamp((curDist+5) - startDist, 0, 10)/10f) * (Time.deltaTime);
+            }
+            tongueLR.SetPosition(i, Vector3.Lerp(transform.position, attachPoint.position, (float)i/((float)tongueLR.positionCount-1f)) + horizontalOffset + verticalOffset);
+        }
+        tongueLR.enabled = tongueOut;
+    }
+    void Look()
+    {
+        Ray ray = new Ray(camHolder.position, camHolder.forward);
+        if (Physics.Raycast(ray, out RaycastHit hit, maxReach))
+        {
+            avaliablePoint = true;
+            lookPoint.transform.position = hit.point;
+            lookAtObject = hit.transform;
+
+            lookingAtFly = hit.transform.gameObject.tag == "Fly";
+        }
+        else
+        {
+            lookingAtFly = false;
+            avaliablePoint = false;
+            //lookPoint.transform.position = camHolder.position + camHolder.forward * (maxReach - 2f);
+            lookPoint.transform.position = camHolder.position - camHolder.forward;
+        }
+    }
+    public void FlyCollected()
+    {
+        lockPoint.transform.parent = transform;
+        retracting = true;
     }
 }

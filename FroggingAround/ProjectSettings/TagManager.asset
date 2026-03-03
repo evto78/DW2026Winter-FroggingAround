@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Ground
   - Interactable
+  - Fly
   layers:
   - Default
   - TransparentFX
