@@ -88,7 +88,7 @@ public class PlayerMovement : MonoBehaviour
             pitch -= sensitivity * Input.GetAxis("Mouse Y");
 
             //limit cam angle
-            pitch = Mathf.Clamp(pitch, -85.0f, 85.0f);
+            pitch = Mathf.Clamp(pitch, -75.0f, 75.0f);
 
             //set cam angle
             transform.eulerAngles = new Vector3(transform.eulerAngles.x, yaw, transform.eulerAngles.z);

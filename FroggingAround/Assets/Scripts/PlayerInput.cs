@@ -12,6 +12,7 @@ public class PlayerInput : MonoBehaviour
     PlayerMovement mvt;
     Rigidbody rb;
     Rigidbody attachedRb;
+    public Animator mouthAnim;
 
     [Header("UI")]
     public Image tongueUI;
@@ -30,6 +31,11 @@ public class PlayerInput : MonoBehaviour
     Transform lookAtObject;
     public Transform lockPoint;
     public AnimationCurve pointSagCurve;
+
+    public Gradient tenseGradient;
+    public Gradient idleGradient;
+    public Gradient looseGradient;
+    public Gradient actingGradient;
 
     [Header("Stats")]
     public float maxReach;
@@ -111,7 +117,7 @@ public class PlayerInput : MonoBehaviour
             attachPoint.position = Vector3.Lerp(transform.position, lockPoint.position, extendSpeedCurve.Evaluate(extendTimer));
 
             if (Vector3.Distance(transform.position, attachPoint.position) > maxReach + 2f) 
-            { retracting = true; lockPoint.parent = transform; tongueAttached = false; }
+            { retracting = true; lockPoint.parent = transform; tongueAttached = false; audioMan.PlaySoundByKey(1); }
         }
         else if (tongueOut && retracting)
         {
@@ -170,10 +176,10 @@ public class PlayerInput : MonoBehaviour
         {
             Vector3 verticalOffset = Vector3.zero;
             Vector3 horizontalOffset = Vector3.zero;
-            if (tongueAttached && startDist > 0)
+            if (tongueAttached)
             {
                 //verticalOffset = -1 * ((Mathf.Clamp(startDist - curDist, 0, 20)/20f) * (Vector3.up * pointSagCurve.Evaluate((float)i / ((float)tongueLR.positionCount - 1))));
-                horizontalOffset = transform.right * 2 * Random.Range(-1f, 1f) * (Mathf.Clamp((curDist+5) - startDist, 0, 10)/10f) * (Time.deltaTime);
+                horizontalOffset = transform.right * 2 * Random.Range(-1f, 1f) * (Mathf.Clamp(curDist - startDist, 0, 10)/8f) * (Time.deltaTime);
             }
             tongueLR.SetPosition(i, Vector3.Lerp(transform.position, attachPoint.position, (float)i/((float)tongueLR.positionCount-1f)) + horizontalOffset + verticalOffset);
         }
@@ -186,9 +192,47 @@ public class PlayerInput : MonoBehaviour
         fliesCountText.text = fliesCount.ToString();
 
         flyTrophy.gameObject.SetActive(fliesGot >= fliesCount);
+
+        GradientColorKey[] newColors = new GradientColorKey[2];
+        newColors[0] = idleGradient.colorKeys[0];
+        newColors[1] = idleGradient.colorKeys[1];
+        if (curDist > maxReach)
+        {
+            newColors[0].color = Color.Lerp(idleGradient.colorKeys[0].color, tenseGradient.colorKeys[0].color, curDist / (maxReach+2f));
+            newColors[1].color = Color.Lerp(idleGradient.colorKeys[1].color, tenseGradient.colorKeys[1].color, curDist / (maxReach+2f));
+        }
+        else if (curDist < startDist)
+        {
+            newColors[0].color = Color.Lerp(idleGradient.colorKeys[0].color, looseGradient.colorKeys[0].color, Mathf.Abs(curDist - startDist) / maxReach);
+            newColors[1].color = Color.Lerp(idleGradient.colorKeys[1].color, looseGradient.colorKeys[1].color, Mathf.Abs(curDist - startDist) / maxReach);
+        }
+        else if (curDist > startDist)
+        {
+            newColors[0].color = Color.Lerp(idleGradient.colorKeys[0].color, tenseGradient.colorKeys[0].color, Mathf.Abs(curDist - startDist) / maxReach);
+            newColors[1].color = Color.Lerp(idleGradient.colorKeys[1].color, tenseGradient.colorKeys[1].color, Mathf.Abs(curDist - startDist) / maxReach);
+        }
+        actingGradient.SetKeys(newColors, idleGradient.alphaKeys);
+        tongueLR.colorGradient = actingGradient;
+
+        attachPoint.GetComponentInChildren<MeshRenderer>().material.color = newColors[1].color;
+
+        if (!passiveInProgress) { StartCoroutine(PassiveFrogNoises()); }
+    }
+    bool passiveInProgress;
+    IEnumerator PassiveFrogNoises()
+    {
+        passiveInProgress = true;
+        if (audioMan.soundEffects[2].source.isPlaying) { yield return new WaitForSeconds(Random.Range(1f, 2f)); }
+        audioMan.PlaySoundByKey(2);
+        yield return new WaitForSeconds(Random.Range(5f,10f));
+        passiveInProgress = false;
+        yield return null;
     }
     IEnumerator FlyPickupFeedback()
     {
+        audioMan.PlaySoundByKey(2);
+        mouthAnim.SetTrigger("Eat");
+
         float timer = 0.5f;
         while(timer > 0)
         {
