@@ -234,6 +234,7 @@ public class PlayerInput : MonoBehaviour
         mouthAnim.SetTrigger("Eat");
 
         float timer = 0.5f;
+        if(fliesGot >= fliesCount) { timer = 1f; }
         while(timer > 0)
         {
             flyCounterUI.localScale = Vector3.one * (1 + timer);
