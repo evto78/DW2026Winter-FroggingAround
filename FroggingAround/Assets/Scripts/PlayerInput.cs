@@ -2,38 +2,50 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class PlayerInput : MonoBehaviour
 {
+    [Header("References")]
     public Transform camHolder;
     public AudioManager audioMan;
+    PlayerMovement mvt;
+    Rigidbody rb;
+    Rigidbody attachedRb;
+
+    [Header("UI")]
     public Image tongueUI;
     public Image tongueUIDist;
+    public TextMeshProUGUI fliesGotText;
+    public TextMeshProUGUI fliesCountText;
+    public Image flyTrophy;
+    public Transform flyCounterUI;
+    public float fliesGot;
+    public float fliesCount;
 
+    [Header("Tongue Management")]
     public LineRenderer tongueLR;
     public Transform attachPoint;
     public Transform lookPoint;
     Transform lookAtObject;
     public Transform lockPoint;
-
-    PlayerMovement mvt;
-    Rigidbody rb;
-    Rigidbody attachedRb;
-
-    public float maxReach;
     public AnimationCurve pointSagCurve;
+
+    [Header("Stats")]
+    public float maxReach;
     public float extendSpeed;
     public AnimationCurve extendSpeedCurve;
     float extendTimer;
     public float pullStrength;
     public float scrollStrength;
 
-    public float startDist;
+    //Trackers
+    float startDist;
     bool avaliablePoint;
     bool tongueOut;
     bool tongueAttached;
     bool retracting;
-    public bool lookingAtFly;
+    bool lookingAtFly;
     void Start()
     {
         mvt = GetComponent<PlayerMovement>();
@@ -72,6 +84,8 @@ public class PlayerInput : MonoBehaviour
         if (retracting) { return; }
         if (avaliablePoint) 
         {
+            audioMan.PlaySoundByKey(0);
+
             lockPoint.position = lookPoint.position;
             lockPoint.parent = lookAtObject;
             if (lookAtObject.TryGetComponent<Rigidbody>(out Rigidbody tempRb))
@@ -167,6 +181,24 @@ public class PlayerInput : MonoBehaviour
 
         tongueUI.fillAmount = startDist / maxReach;
         tongueUIDist.fillAmount = curDist / maxReach;
+
+        fliesGotText.text = fliesGot.ToString();
+        fliesCountText.text = fliesCount.ToString();
+
+        flyTrophy.gameObject.SetActive(fliesGot >= fliesCount);
+    }
+    IEnumerator FlyPickupFeedback()
+    {
+        float timer = 0.5f;
+        while(timer > 0)
+        {
+            flyCounterUI.localScale = Vector3.one * (1 + timer);
+            timer -= Time.deltaTime/2f;
+            yield return new WaitForEndOfFrame();
+        }
+        flyCounterUI.localScale = Vector3.one;
+
+        yield return null;
     }
     void Look()
     {
@@ -190,7 +222,11 @@ public class PlayerInput : MonoBehaviour
     public void FlyCollected()
     {
         lockPoint.transform.parent = transform;
-        Debug.Log("Fly collected");
+        //Debug.Log("Fly collected");
+        fliesGot++;
         retracting = true;
+
+        StopCoroutine(FlyPickupFeedback());
+        StartCoroutine(FlyPickupFeedback());
     }
 }
