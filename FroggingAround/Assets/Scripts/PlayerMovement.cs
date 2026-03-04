@@ -29,6 +29,8 @@ public class PlayerMovement : MonoBehaviour
     public bool onGround;
     bool isSprinting;
 
+    float jumpTimer;
+
     Vector3 inputDir;
 
     void Start()
@@ -51,6 +53,8 @@ public class PlayerMovement : MonoBehaviour
     void Update()
     {
         onGround = GroundCheck();
+        if (jumpTimer > 0) { jumpTimer -= Time.deltaTime; }
+
         if (Cursor.lockState == CursorLockMode.Locked) { CameraMove(); }
         GetInputs();
     }
@@ -64,7 +68,7 @@ public class PlayerMovement : MonoBehaviour
     }
     bool GroundCheck()
     {
-        if (Physics.BoxCast(new Vector3(transform.position.x, transform.position.y+0.5f, transform.position.z), transform.localScale * 0.5f, -Vector3.up, out RaycastHit hit, transform.rotation, 1f))
+        if (Physics.BoxCast(new Vector3(transform.position.x, transform.position.y+0.5f, transform.position.z), transform.localScale * 0.5f, -Vector3.up, out RaycastHit hit, transform.rotation, 0.5f))
         {
             if (hit.transform.gameObject.CompareTag("Ground") || hit.transform.gameObject.CompareTag("Untagged"))
             {
@@ -99,9 +103,9 @@ public class PlayerMovement : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.LeftShift))
         {
-            if (isSprinting) { isSprinting = false; } else { isSprinting = true; }
+            //if (isSprinting) { isSprinting = false; } else { isSprinting = true; }
         }
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKey(KeyCode.Space))
         {
             Jump();
         }
@@ -116,17 +120,14 @@ public class PlayerMovement : MonoBehaviour
     {
         transform.eulerAngles = new Vector3(0, transform.eulerAngles.y, 0);
 
-        if (onGround)
+        if (!onGround)
         {
             rb.AddRelativeForce(inputDir * airStrafeSpeed * Time.deltaTime, ForceMode.Impulse);
         }
-        else if (isSprinting)
-        {
-            rb.AddRelativeForce(inputDir * sprintMoveSpeed * Time.deltaTime, ForceMode.Impulse);
-        }
         else
         {
-            rb.AddRelativeForce(inputDir * moveSpeed * Time.deltaTime, ForceMode.Impulse);
+            //rb.AddRelativeForce(inputDir * moveSpeed * Time.deltaTime, ForceMode.Impulse);
+            if(inputDir != Vector3.zero) { MiniJump(); }
         }
 
         //Limit Velocity realative to speed
@@ -156,10 +157,24 @@ public class PlayerMovement : MonoBehaviour
     }
     void Jump()
     {
+        if (jumpTimer > 0) { return; }
         if (jumpsLeft > 0 && onGround)
         {
             jumpsLeft -= 1;
-            rb.AddForce((transform.up+(transform.forward/2f)) * jumpForce, ForceMode.Force);
+            jumpTimer = 0.5f;
+            rb.velocity = new Vector3(rb.velocity.x, 0, rb.velocity.z);
+            rb.AddForce((Vector3.up+(transform.forward/2f)) * jumpForce, ForceMode.Impulse);
+        }
+    }
+    void MiniJump()
+    {
+        if (jumpTimer > 0) { return; }
+        if (jumpsLeft > 0 && onGround)
+        {
+            jumpsLeft -= 1;
+            jumpTimer = 0.1f;
+            rb.velocity = new Vector3(rb.velocity.x, 0, rb.velocity.z);
+            rb.AddRelativeForce(((Vector3.up * jumpForce / 3f) + (inputDir * (moveSpeed/100f))), ForceMode.Impulse);
         }
     }
     void Friction()

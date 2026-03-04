@@ -10,12 +10,16 @@ public class FlyScript : MonoBehaviour
     public float wingSpeed;
     public float flySpeed;
 
-    float wingDir = 1;
+    public float wingDir = 1;
 
     Vector3 startPoint;
     Vector3 randOffset;
     Vector3 randFlyOffset;
     float randFlySpeedMod;
+
+    bool isHit = false;
+
+    public float flapProgress;
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -28,7 +32,9 @@ public class FlyScript : MonoBehaviour
     }
     public void Hit()
     {
+        if (isHit) { return; }
         rb.useGravity = true;
+        isHit = true;
     }
     private void OnCollisionEnter(Collision collision)
     {
@@ -40,14 +46,24 @@ public class FlyScript : MonoBehaviour
     }
     void Update()
     {
-        leftWing.localEulerAngles -= Vector3.forward * wingSpeed * Time.deltaTime;
-        rightWing.localEulerAngles += Vector3.forward * wingSpeed * Time.deltaTime;
-        if (leftWing.localEulerAngles.z < -5 && wingDir == 1) { wingDir = -1; }
-        if (leftWing.localEulerAngles.z > 5 && wingDir == -1) { wingDir = 1; }
+        if (isHit)
+        {
+            leftWing.localEulerAngles += Vector3.forward * wingDir * wingSpeed * Time.deltaTime;
+            rightWing.localEulerAngles -= Vector3.forward * wingDir * wingSpeed * Time.deltaTime;
+            wingDir = Random.Range(-5f, 5f);
+        }
+        else
+        {
+            leftWing.localEulerAngles += Vector3.forward * wingSpeed * wingDir * Time.deltaTime;
+            rightWing.localEulerAngles -= Vector3.forward * wingSpeed * wingDir * Time.deltaTime;
+            flapProgress += wingSpeed * wingDir * Time.deltaTime;
+            if(wingDir > 0 && flapProgress >= 50f) { wingDir = -1; }
+            else if (wingDir < 0 && flapProgress <= -20f) { wingDir = 1; }
 
-        if (rb.velocity.magnitude != 0) { transform.rotation = Quaternion.LookRotation(rb.velocity); }
-        
-        if (Vector3.Distance(transform.position, startPoint+randOffset) < 0.5f) { randFlyOffset = new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)); }
-        rb.AddForce((((startPoint + randOffset) - transform.position)/2f + randFlyOffset/1.2f) * flySpeed * randFlySpeedMod * Time.deltaTime);
+            if (rb.velocity.magnitude != 0) { transform.rotation = Quaternion.LookRotation(rb.velocity); }
+            
+            if (Vector3.Distance(transform.position, startPoint + randOffset) < 0.5f) { randFlyOffset = new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)); }
+            rb.AddForce((((startPoint + randOffset) - transform.position) / 2f + randFlyOffset / 1.2f) * flySpeed * randFlySpeedMod * Time.deltaTime);
+        }
     }
 }

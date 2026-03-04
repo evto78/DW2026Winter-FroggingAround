@@ -1,10 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerInput : MonoBehaviour
 {
     public Transform camHolder;
+    public AudioManager audioMan;
+    public Image tongueUI;
+    public Image tongueUIDist;
 
     public LineRenderer tongueLR;
     public Transform attachPoint;
@@ -24,7 +28,7 @@ public class PlayerInput : MonoBehaviour
     public float pullStrength;
     public float scrollStrength;
 
-    float startDist;
+    public float startDist;
     bool avaliablePoint;
     bool tongueOut;
     bool tongueAttached;
@@ -33,6 +37,7 @@ public class PlayerInput : MonoBehaviour
     void Start()
     {
         mvt = GetComponent<PlayerMovement>();
+        audioMan = GetComponent<AudioManager>();
         rb = mvt.rb;
 
         avaliablePoint = false;
@@ -50,13 +55,17 @@ public class PlayerInput : MonoBehaviour
     }
     void GetInputs()
     {
-        if (Input.GetKeyDown(KeyCode.Mouse0) || (lookingAtFly && Input.GetKey(KeyCode.Mouse0))) { ExtendTongue(); }
+        if (Input.GetKeyDown(KeyCode.Mouse0)) { ExtendTongue(); }
         else if (Input.GetKeyUp(KeyCode.Mouse0)) { retracting = true;}
 
         float scrollData = Input.mouseScrollDelta.y;
 
-        startDist += scrollData * scrollStrength * Time.deltaTime;
-        startDist = Mathf.Clamp(startDist, 0, maxReach);
+        if (tongueAttached)
+        {
+            startDist += scrollData * scrollStrength * Time.deltaTime;
+            startDist = Mathf.Clamp(startDist, 0, maxReach);
+        }
+        
     }
     void ExtendTongue()
     {
@@ -83,18 +92,26 @@ public class PlayerInput : MonoBehaviour
         {
             attachPoint.GetComponentInChildren<MeshRenderer>().enabled = true;
 
-            extendTimer += Time.deltaTime * extendSpeed; if (extendTimer > 1) { extendTimer = 1; tongueAttached = true; }
+            if (extendTimer <= 1) { extendTimer += Time.deltaTime * extendSpeed; }
+            if (extendTimer > 1) { extendTimer = 1f; if (!tongueAttached) { startDist = Vector3.Distance(transform.position, attachPoint.position); } tongueAttached = true;  }
             attachPoint.position = Vector3.Lerp(transform.position, lockPoint.position, extendSpeedCurve.Evaluate(extendTimer));
 
             if (Vector3.Distance(transform.position, attachPoint.position) > maxReach + 2f) 
-            { retracting = true; lockPoint.parent = transform; tongueAttached = false; startDist = Vector3.Distance(transform.position, attachPoint.position); }
+            { retracting = true; lockPoint.parent = transform; tongueAttached = false; }
         }
         else if (tongueOut && retracting)
         {
             attachPoint.GetComponentInChildren<MeshRenderer>().enabled = true;
 
-            extendTimer -= Time.deltaTime * extendSpeed; if (extendTimer < 0) { extendTimer = 0; retracting = false; tongueOut = false; }
+            extendTimer -= Time.deltaTime * extendSpeed; if (extendTimer < 0) { extendTimer = 0; retracting = false; tongueOut = false; startDist = 0; }
             attachPoint.position = Vector3.Lerp(transform.position, lockPoint.position, extendSpeedCurve.Evaluate(extendTimer));
+        }
+
+        //if (!tongueOut) { startDist = 0; }
+
+        if (tongueAttached && lockPoint.parent.TryGetComponent<FlyScript>(out FlyScript fScript))
+        {
+            fScript.Hit();
         }
 
         if (retracting && extendTimer <= 0) { extendTimer = 0; retracting = false; tongueOut = false; attachPoint.position = transform.position; }
@@ -147,6 +164,9 @@ public class PlayerInput : MonoBehaviour
             tongueLR.SetPosition(i, Vector3.Lerp(transform.position, attachPoint.position, (float)i/((float)tongueLR.positionCount-1f)) + horizontalOffset + verticalOffset);
         }
         tongueLR.enabled = tongueOut;
+
+        tongueUI.fillAmount = startDist / maxReach;
+        tongueUIDist.fillAmount = curDist / maxReach;
     }
     void Look()
     {
@@ -170,6 +190,7 @@ public class PlayerInput : MonoBehaviour
     public void FlyCollected()
     {
         lockPoint.transform.parent = transform;
+        Debug.Log("Fly collected");
         retracting = true;
     }
 }
