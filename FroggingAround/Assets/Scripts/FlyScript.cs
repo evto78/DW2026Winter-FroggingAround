@@ -29,6 +29,8 @@ public class FlyScript : MonoBehaviour
         randOffset = new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f));
         randFlyOffset = new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f));
         randFlySpeedMod = Random.Range(1f, 2f);
+
+        GameObject.Find("Player").GetComponent<PlayerInput>().fliesCount++;
     }
     public void Hit()
     {

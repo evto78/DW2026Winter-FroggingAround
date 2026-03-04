@@ -7,6 +7,7 @@ public class AudioManager : MonoBehaviour
     [System.Serializable]
     public class SoundEffect
     {
+        public string soundName;
         public AudioSource source;
         public List<AudioClip> clips;
     }
