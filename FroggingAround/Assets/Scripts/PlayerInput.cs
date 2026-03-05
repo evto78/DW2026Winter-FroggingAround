@@ -153,16 +153,16 @@ public class PlayerInput : MonoBehaviour
 
                 if (attachedRb == null) //Attached obj is static
                 {
-                    rb.AddForce((attachPoint.position - transform.position).normalized * (difference / 2f) * pullStrength / 2f);
+                    rb.AddForce((attachPoint.position - transform.position).normalized * (difference / 2f) * pullStrength / 1f);
                 }
                 else if (rb.mass > attachedRb.mass) //Attached obj is lighter
                 {
-                    rb.AddForce((attachPoint.position - transform.position).normalized * (difference / 2f) * pullStrength / 2f);
+                    rb.AddForce((attachPoint.position - transform.position).normalized * (difference / 2f) * pullStrength / 1f);
                     attachedRb.AddForceAtPosition((transform.position - attachPoint.position).normalized * (difference / 2f) * pullStrength, attachPoint.position);
                 }
                 else if (rb.mass <= attachedRb.mass) //Attached obj is heavier
                 {
-                    rb.AddForce((attachPoint.position - transform.position).normalized * (difference / 2f) * pullStrength / 2f);
+                    rb.AddForce((attachPoint.position - transform.position).normalized * (difference / 2f) * pullStrength / 1f);
                     attachedRb.AddForceAtPosition((transform.position - attachPoint.position).normalized * (difference / 2f) * pullStrength, attachPoint.position);
                 }
             }
@@ -234,7 +234,7 @@ public class PlayerInput : MonoBehaviour
         mouthAnim.SetTrigger("Eat");
 
         float timer = 0.5f;
-        if(fliesGot >= fliesCount) { timer = 1f; }
+        if (fliesGot >= fliesCount) { timer = 1f; }
         while(timer > 0)
         {
             flyCounterUI.localScale = Vector3.one * (1 + timer);
