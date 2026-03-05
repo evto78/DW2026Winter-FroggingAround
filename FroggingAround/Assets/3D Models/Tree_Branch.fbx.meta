@@ -1,14 +1,9 @@
 fileFormatVersion: 2
-guid: 8fc5a8d5b4d1189449c7704200cbb248
+guid: a28b1447106fa8849abc7eaaa7e3a381
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects:
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: TrunkShader
-    second: {fileID: 2100000, guid: 767b42f12af621f4d914c7690671636b, type: 2}
+  externalObjects: {}
   materials:
     materialImportMode: 2
     materialName: 0
