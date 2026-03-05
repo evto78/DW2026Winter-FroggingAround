@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class PlayerInput : MonoBehaviour
 {
@@ -23,6 +24,7 @@ public class PlayerInput : MonoBehaviour
     public Transform flyCounterUI;
     public float fliesGot;
     public float fliesCount;
+    public Transform pauseMenu;
 
     [Header("Tongue Management")]
     public LineRenderer tongueLR;
@@ -54,6 +56,7 @@ public class PlayerInput : MonoBehaviour
     bool lookingAtFly;
     void Start()
     {
+        Time.timeScale = 1f;
         mvt = GetComponent<PlayerMovement>();
         audioMan = GetComponent<AudioManager>();
         rb = mvt.rb;
@@ -85,6 +88,35 @@ public class PlayerInput : MonoBehaviour
             startDist = Mathf.Clamp(startDist, 0, maxReach);
         }
         
+        if (Input.GetKeyDown(KeyCode.Escape)) { PauseUnPause(); }
+    }
+    public void PauseUnPause()
+    {
+        switch (Cursor.lockState)
+        {
+            case CursorLockMode.Locked:
+                Cursor.lockState = CursorLockMode.Confined;
+                Cursor.visible = true;
+                pauseMenu.gameObject.SetActive(true);
+                break;
+            case CursorLockMode.Confined:
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+                pauseMenu.gameObject.SetActive(false);
+                break;
+        }
+    }
+    public void LoadMainMenu()
+    {
+        SceneManager.LoadScene(0);
+    }
+    public void CloseGame()
+    {
+        Application.Quit();
+    }
+    private void OnApplicationQuit()
+    {
+        Time.timeScale = 1f;
     }
     void ExtendTongue()
     {

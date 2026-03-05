@@ -49,6 +49,7 @@ public class PlayerMovement : MonoBehaviour
         gravityModifier = 1f;
 
         Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
     void Update()
     {
