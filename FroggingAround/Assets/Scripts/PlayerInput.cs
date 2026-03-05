@@ -130,7 +130,7 @@ public class PlayerInput : MonoBehaviour
 
         //if (!tongueOut) { startDist = 0; }
 
-        if (tongueAttached && lockPoint.parent.TryGetComponent<FlyScript>(out FlyScript fScript))
+        if (tongueAttached && tongueOut && lockPoint.parent.TryGetComponent<FlyScript>(out FlyScript fScript))
         {
             fScript.Hit();
         }

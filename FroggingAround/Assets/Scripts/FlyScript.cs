@@ -20,8 +20,11 @@ public class FlyScript : MonoBehaviour
     bool isHit = false;
 
     public float flapProgress;
+    public float hitTimer;
     void Start()
     {
+        hitTimer = 0f;
+
         rb = GetComponent<Rigidbody>();
         rb.useGravity = false;
 
@@ -34,6 +37,7 @@ public class FlyScript : MonoBehaviour
     }
     public void Hit()
     {
+        hitTimer = 5f;
         if (isHit) { return; }
         rb.useGravity = true;
         isHit = true;
@@ -53,6 +57,9 @@ public class FlyScript : MonoBehaviour
             leftWing.localEulerAngles += Vector3.forward * wingDir * wingSpeed * Time.deltaTime;
             rightWing.localEulerAngles -= Vector3.forward * wingDir * wingSpeed * Time.deltaTime;
             wingDir = Random.Range(-5f, 5f);
+
+            hitTimer -= Time.deltaTime;
+            if (hitTimer <= 0) { isHit = false; wingDir = 1; }
         }
         else
         {
