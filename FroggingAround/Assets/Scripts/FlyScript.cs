@@ -67,5 +67,7 @@ public class FlyScript : MonoBehaviour
             if (Vector3.Distance(transform.position, startPoint + randOffset) < 0.5f) { randFlyOffset = new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)); }
             rb.AddForce((((startPoint + randOffset) - transform.position) / 2f + randFlyOffset / 1.2f) * flySpeed * randFlySpeedMod * Time.deltaTime);
         }
+
+        if (rb.velocity.magnitude > 10f && !isHit) { rb.velocity /= 1 + (Time.deltaTime*5f); }
     }
 }
