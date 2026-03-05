@@ -19,7 +19,7 @@ public class FlyCagePuzzle : MonoBehaviour
     {
         for(int i = 0; i < lights.Count; i++)
         {
-            if(currentObjects >= i) { lights[i].material = onMat; }
+            if(currentObjects > i) { lights[i].material = onMat; }
             else { lights[i].material = offMat; }
         }
 
