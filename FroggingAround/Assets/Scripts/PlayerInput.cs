@@ -77,6 +77,7 @@ public class PlayerInput : MonoBehaviour
         else if (Input.GetKeyUp(KeyCode.Mouse0)) { retracting = true;}
 
         float scrollData = Input.mouseScrollDelta.y;
+        if (Input.GetKey(KeyCode.Mouse1)) { scrollData -= 2f; }
 
         if (tongueAttached)
         {
