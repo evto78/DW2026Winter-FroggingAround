@@ -136,19 +136,19 @@ public class PlayerMovement : MonoBehaviour
 
         if (isSprinting)
         {
-            if (limitedVelocity.magnitude >= sprintMoveSpeed / 100f)
+            if (limitedVelocity.magnitude >= sprintMoveSpeed / 50f)
             {
                 limitedVelocity = Vector3.Normalize(limitedVelocity);
-                limitedVelocity = limitedVelocity * sprintMoveSpeed / 100f;
+                limitedVelocity = limitedVelocity * sprintMoveSpeed / 50f;
                 rb.velocity = new Vector3(limitedVelocity.x, rb.velocity.y, limitedVelocity.z);
             }
         }
         else
         {
-            if (limitedVelocity.magnitude >= moveSpeed / 100f)
+            if (limitedVelocity.magnitude >= moveSpeed / 50f)
             {
                 limitedVelocity = Vector3.Normalize(limitedVelocity);
-                limitedVelocity = limitedVelocity * moveSpeed / 100f;
+                limitedVelocity = limitedVelocity * moveSpeed / 50f;
                 rb.velocity = new Vector3(limitedVelocity.x, rb.velocity.y, limitedVelocity.z);
             }
         }
